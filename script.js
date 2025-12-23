@@ -19,7 +19,9 @@ const createMessageElement = (content, ...classes) => {
 }
 
 // Generate bot response using API
-const generateBotResponse = async () =>{
+const generateBotResponse = async (incomingMessageDiv) =>{
+  const messageElement = incomingMessageDiv.querySelector(".message-text");
+
   // API request options
   const requestOptions = {
     method: "POST",
@@ -37,9 +39,13 @@ const generateBotResponse = async () =>{
     const data = await response.json ();
     if(!response.ok) throw new Error (data.error.message);
     
-    console.log(data);
+    //Extract and display bot's response text
+    const apiResponseText = data.candidates[0].content.parts[0].text.replace(/\*\*(.*?)*\*\*/).trim();
+    messageElement.innerText = apiResponseText;
   } catch (error) {
     console.log(error)
+  } finally {
+    incomingMessageDiv.classList.remove("thinking")
   }
 }
 
@@ -52,9 +58,9 @@ const handleOutgoingMessage = (e) => {
   //Create and display user message
   const messageContent = `<div class="message-text"></div>`;
 
-  const outgoingMessaegDiv = createMessageElement(messageContent, "user-message");
-  outgoingMessaegDiv.querySelector(".message-text").innerText = userData.message;
-  chatBody.appendChild(outgoingMessaegDiv);
+  const outgoingMessageDiv = createMessageElement(messageContent, "user-message");
+  outgoingMessageDiv.querySelector(".message-text").innerText = userData.message;
+  chatBody.appendChild(outgoingMessageDiv);
 
   //Simulate bot response with thinking indicator after a delay
   setTimeout(() => {
@@ -68,9 +74,9 @@ const handleOutgoingMessage = (e) => {
             <div class="dot"></div>
           </div>`;
 
-  const incomingMessaegDiv = createMessageElement(messageContent, "bot-message", "thinking");
-  chatBody.appendChild(incomingMessaegDiv);
-  generateBotResponse();
+  const incomingMessageDiv = createMessageElement(messageContent, "bot-message", "thinking");
+  chatBody.appendChild(incomingMessageDiv);
+  generateBotResponse(incomingMessageDiv);
   }, 600);
 }
 
